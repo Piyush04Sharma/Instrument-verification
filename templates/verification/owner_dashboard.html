@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Hello, {{ user.first_name|default:user.username }}</h1>
+    {% if last_visit %}<p class="muted small">Your last visit was on {{ last_visit|date:"d M Y, H:i" }}.</p>{% endif %}
+  </div>
+  <a class="btn" href="{% url 'verification:apply' %}">Apply for verification</a>
+</div>
+
+<div class="stats">
+  <div class="stat"><span class="stat-num">{{ instrument_count }}</span><span class="stat-label">Instruments</span></div>
+  <div class="stat"><span class="stat-num">{{ open_count }}</span><span class="stat-label">Applications in progress</span></div>
+  <div class="stat"><span class="stat-num">{{ certified_count }}</span><span class="stat-label">Certificates issued</span></div>
+  <div class="stat"><span class="stat-num">{{ rejected_count }}</span><span class="stat-label">Need your correction</span></div>
+</div>
+
+{% if awaiting_payment %}
+<section class="notice">
+  <h2>Payment pending</h2>
+  {% for a in awaiting_payment %}
+    <p>{{ a.reference }} for {{ a.instrument }}: <a href="{% url 'verification:pay' a.pk %}">pay ₹{{ a.fee }}</a> to submit it.</p>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if renewals %}
+<section class="notice">
+  <h2>Renewal due</h2>
+  {% for instrument, cert in renewals %}
+    <p>{{ instrument }}: certificate {{ cert.number }} <span class="badge badge-{{ cert.state }}">{{ cert.state_label }}</span> ({{ cert.valid_until|date:"d M Y" }}).
+       <a href="{% url 'verification:apply' %}?instrument={{ instrument.pk }}">Apply again</a></p>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if never_verified %}
+<p class="muted">{{ never_verified }} instrument{{ never_verified|pluralize }} {{ never_verified|pluralize:"has,have" }} never been verified.</p>
+{% endif %}
+
+<div class="split">
+  <section>
+    <h2>Latest applications</h2>
+    {% for a in latest_applications %}
+      <p><a href="{% url 'verification:application_detail' a.pk %}">{{ a.reference }}</a> <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span><br>
+      <span class="muted">{{ a.instrument }}</span></p>
+    {% empty %}
+      <p class="muted">You haven't applied yet.</p>
+    {% endfor %}
+  </section>
+  <section>
+    <h2>Recently opened instruments</h2>
+    {% for i in recent %}
+      <p><a href="{% url 'instruments:detail' i.pk %}">{{ i.make }} {{ i.model_number }}</a> <span class="muted">{{ i.serial_number }}</span></p>
+    {% empty %}
+      <p class="muted">Instruments you open will appear here.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

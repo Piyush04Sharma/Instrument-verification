@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}{{ instrument.make }} {{ instrument.model_number }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ instrument.make }} {{ instrument.model_number }}</h1>
+  <div class="actions">
+    <a class="btn" href="{% url 'verification:apply' %}?instrument={{ instrument.pk }}">Apply for verification</a>
+  </div>
+</div>
+
+<div class="split">
+  <section>
+    <h2>Details</h2>
+    <dl class="facts">
+      <dt>Category</dt><dd>{{ instrument.category.name }}</dd>
+      <dt>Serial number</dt><dd>{{ instrument.serial_number }}</dd>
+      <dt>Capacity</dt><dd>{{ instrument.capacity|floatformat:"-3" }} {{ instrument.unit }}</dd>
+      <dt>Accuracy class</dt><dd>{{ instrument.get_accuracy_class_display }}</dd>
+      <dt>Year of manufacture</dt><dd>{{ instrument.year_of_manufacture }}</dd>
+      <dt>Place of use</dt><dd>{{ instrument.location_of_use }}</dd>
+      <dt>Verification fee</dt><dd>₹{{ instrument.category.verification_fee }}</dd>
+    </dl>
+    {% if not instrument.is_locked %}
+      <div class="actions">
+        <a class="btn-link" href="{% url 'instruments:edit' instrument.pk %}">Edit details</a>
+        <form method="post" action="{% url 'instruments:delete' instrument.pk %}" class="inline-form" onsubmit="return confirm('Delete this instrument?');">
+          {% csrf_token %}
+          <button type="submit" class="link-button danger">Delete</button>
+        </form>
+      </div>
+    {% else %}
+      <p class="muted small">Details are locked because this instrument has verification applications.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Certificate</h2>
+    {% if certificate %}
+      <p><span class="badge badge-{{ certificate.state }}">{{ certificate.state_label }}</span></p>
+      <dl class="facts">
+        <dt>Number</dt><dd>{{ certificate.number }}</dd>
+        <dt>Issued</dt><dd>{{ certificate.issued_on|date:"d M Y" }}</dd>
+        <dt>Valid until</dt><dd>{{ certificate.valid_until|date:"d M Y" }}</dd>
+      </dl>
+      <a class="btn-link" href="{% url 'verification:certificate_pdf' certificate.number %}">Download certificate (PDF)</a>
+    {% else %}
+      <p class="muted">This instrument has no certificate yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section>
+  <h2>Applications</h2>
+  {% for a in applications %}
+    <p><a href="{% url 'verification:application_detail' a.pk %}">{{ a.reference }}</a> <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span> <span class="muted">{{ a.created_at|date:"d M Y" }}</span></p>
+  {% empty %}
+    <p class="muted">No applications yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}

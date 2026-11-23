@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Officer dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Officer dashboard</h1>
+  <a class="btn" href="{% url 'verification:officer_applications' %}">All applications</a>
+</div>
+<div class="stats">
+  <div class="stat"><span class="stat-num">{{ submitted_count }}</span><span class="stat-label">Waiting for review</span></div>
+  <div class="stat"><span class="stat-num">{{ in_progress_count }}</span><span class="stat-label">In progress</span></div>
+  <div class="stat"><span class="stat-num">{{ certified_count }}</span><span class="stat-label">Certificates issued</span></div>
+  <div class="stat"><span class="stat-num">{{ rejected_count }}</span><span class="stat-label">Rejected</span></div>
+</div>
+<div class="split">
+  <section>
+    <h2>Waiting for review</h2>
+    {% for a in waiting %}
+      <p><a href="{% url 'verification:officer_application_detail' a.pk %}">{{ a.reference }}</a><br><span class="muted">{{ a.instrument }} from {{ a.applicant.username }}</span></p>
+    {% empty %}<p class="muted">No new applications.</p>{% endfor %}
+  </section>
+  <section>
+    <h2>Assigned to you</h2>
+    {% for a in mine %}
+      <p><a href="{% url 'verification:officer_application_detail' a.pk %}">{{ a.reference }}</a> <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span><br><span class="muted">{{ a.instrument }}</span></p>
+    {% empty %}<p class="muted">Nothing assigned to you.</p>{% endfor %}
+  </section>
+</div>
+{% endblock %}

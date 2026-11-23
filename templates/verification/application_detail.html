@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}{{ app.reference }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ app.reference }}</h1>
+    <p><span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span> <span class="muted">for {{ app.instrument }}</span></p>
+  </div>
+  {% if app.status == 'pending_payment' %}<a class="btn" href="{% url 'verification:pay' app.pk %}">Pay ₹{{ app.fee }}</a>{% endif %}
+</div>
+
+{% if app.status == 'rejected' %}
+<section class="notice notice-bad">
+  <h2>Why it was rejected</h2>
+  <p>{{ app.rejection_reason|linebreaksbr }}</p>
+  <form method="post" action="{% url 'verification:resubmit' app.pk %}">
+    {% csrf_token %}
+    <p class="muted small">Upload a corrected document if needed, then submit again. No new fee is charged.</p>
+    <div class="actions">
+      <a class="btn-link" href="{% url 'verification:add_document' app.pk %}">Upload another document</a>
+      <button type="submit" class="btn">Submit again</button>
+    </div>
+  </form>
+</section>
+{% else %}
+<ol class="progress" aria-label="Progress">
+  {% for step in steps %}<li class="{{ step.state }}">{{ step.label }}</li>{% endfor %}
+</ol>
+{% endif %}
+
+{% if app.inspection_date and app.status == 'scheduled' %}
+<section class="notice">
+  <h2>Inspection on {{ app.inspection_date|date:"l, d F Y" }}</h2>
+  {% if app.inspection_note %}<p>{{ app.inspection_note }}</p>{% endif %}
+</section>
+{% endif %}
+
+<div class="split">
+  <section>
+    <h2>Instrument</h2>
+    <dl class="facts">
+      <dt>Category</dt><dd>{{ app.instrument.category.name }}</dd>
+      <dt>Serial number</dt><dd>{{ app.instrument.serial_number }}</dd>
+      <dt>Capacity</dt><dd>{{ app.instrument.capacity|floatformat:"-3" }} {{ app.instrument.unit }}</dd>
+      <dt>Fee</dt><dd>₹{{ app.fee }}</dd>
+      {% if app.officer %}<dt>Officer</dt><dd>{{ app.officer.get_full_name|default:app.officer.username }}</dd>{% endif %}
+    </dl>
+  </section>
+  <section>
+    <h2>Documents</h2>
+    {% for d in documents %}
+      <p><a href="{% url 'verification:document_download' d.pk %}">{{ d.get_doc_type_display }}</a> <span class="muted">{{ d.uploaded_at|date:"d M Y" }}</span></p>
+    {% empty %}<p class="muted">No documents uploaded.</p>{% endfor %}
+    {% if app.status == 'pending_payment' or app.status == 'submitted' %}
+      <a class="btn-link" href="{% url 'verification:add_document' app.pk %}">Upload another document</a>
+    {% endif %}
+  </section>
+</div>
+
+<div class="split">
+  <section>
+    <h2>Payment</h2>
+    {% if payment %}
+      <dl class="facts">
+        <dt>Amount</dt><dd>₹{{ payment.amount }}</dd>
+        <dt>Method</dt><dd>{{ payment.get_method_display }}</dd>
+        <dt>Transaction</dt><dd>{{ payment.transaction_id }}</dd>
+        <dt>Paid on</dt><dd>{{ payment.paid_at|date:"d M Y, H:i" }}</dd>
+      </dl>
+    {% else %}<p class="muted">Not paid yet.</p>{% endif %}
+  </section>
+  <section>
+    <h2>Inspection result</h2>
+    {% if inspection %}
+      <dl class="facts">
+        <dt>Inspected on</dt><dd>{{ inspection.inspected_on|date:"d M Y" }}</dd>
+        <dt>Reference value</dt><dd>{{ inspection.reference_value|floatformat:"-3" }}</dd>
+        <dt>Observed value</dt><dd>{{ inspection.observed_value|floatformat:"-3" }}</dd>
+        <dt>Error</dt><dd>{{ inspection.error|floatformat:"-3" }} (limit {{ inspection.permissible_error|floatformat:"-3" }})</dd>
+      </dl>
+      {% if inspection.remarks %}<p class="muted">{{ inspection.remarks }}</p>{% endif %}
+    {% else %}<p class="muted">The inspection has not been recorded yet.</p>{% endif %}
+  </section>
+</div>
+
+{% if certificate %}
+<section class="notice notice-ok">
+  <h2>Certificate {{ certificate.number }}</h2>
+  <p><span class="badge badge-{{ certificate.state }}">{{ certificate.state_label }}</span> Valid from {{ certificate.issued_on|date:"d M Y" }} until {{ certificate.valid_until|date:"d M Y" }}.</p>
+  <p class="actions">
+    <a class="btn" href="{% url 'verification:certificate_pdf' certificate.number %}">Download certificate (PDF)</a>
+    <a class="btn-link" href="{% url 'verification:verify_number' certificate.number %}">Public check page</a>
+  </p>
+</section>
+{% endif %}
+{% endblock %}

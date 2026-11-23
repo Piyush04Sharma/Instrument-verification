@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Pay verification fee{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Pay the verification fee</h1>
+  <p class="lead">Application {{ app.reference }} for {{ app.instrument }}.</p>
+  <p class="amount">₹{{ app.fee }}</p>
+  <p class="muted small">This is a practice payment. No money is charged, and a transaction number is stored when you confirm.</p>
+  <form method="post">
+    {% csrf_token %}
+    {% include 'includes/form_fields.html' %}
+    <div class="actions">
+      <button type="submit" class="btn">Pay ₹{{ app.fee }}</button>
+      <a class="btn-link" href="{% url 'verification:application_detail' app.pk %}">Pay later</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Your instruments{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Your instruments</h1>
+  <a class="btn" href="{% url 'instruments:add' %}">Register an instrument</a>
+</div>
+
+<form method="get" class="filters">
+  <label for="q" class="sr">Search</label>
+  <input id="q" type="search" name="q" value="{{ q }}" placeholder="Search by make, model or serial number">
+  <label for="category" class="sr">Category</label>
+  <select id="category" name="category">
+    <option value="">All categories</option>
+    {% for c in categories %}<option value="{{ c.pk }}"{% if category == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="btn btn-quiet">Filter</button>
+</form>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Instrument</th><th>Category</th><th>Capacity</th><th>Certificate</th></tr></thead>
+    <tbody>
+      {% for i in page_obj %}
+      <tr>
+        <td><a href="{% url 'instruments:detail' i.pk %}">{{ i.make }} {{ i.model_number }}</a><br><span class="muted">{{ i.serial_number }}</span></td>
+        <td>{{ i.category.name }}</td>
+        <td>{{ i.capacity|floatformat:"-3" }} {{ i.unit }}</td>
+        <td>{% with cert=i.latest_certificate %}{% if cert %}<span class="badge badge-{{ cert.state }}">{{ cert.state_label }}</span> <span class="muted">until {{ cert.valid_until|date:"d M Y" }}</span>{% else %}<span class="muted">Not verified yet</span>{% endif %}{% endwith %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="empty">No instruments yet. <a href="{% url 'instruments:add' %}">Register your first instrument</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include 'includes/pagination.html' %}
+{% endblock %}

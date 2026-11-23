@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}{{ app.reference }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ app.reference }}</h1>
+    <p><span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span> <span class="muted">{{ app.instrument }}</span></p>
+  </div>
+</div>
+
+{% if app.status == 'rejected' %}
+  <section class="notice notice-bad"><h2>Rejected</h2><p>{{ app.rejection_reason|linebreaksbr }}</p></section>
+{% else %}
+  <ol class="progress" aria-label="Progress">
+    {% for step in steps %}<li class="{{ step.state }}">{{ step.label }}</li>{% endfor %}
+  </ol>
+{% endif %}
+
+{% if can_act %}
+<section class="notice">
+  <h2>Next step</h2>
+  <div class="actions">
+    {% if app.status == 'submitted' %}
+      <form method="post" action="{% url 'verification:officer_start_review' app.pk %}">{% csrf_token %}<button type="submit" class="btn">Start review</button></form>
+    {% endif %}
+    {% if app.status == 'under_review' or app.status == 'scheduled' %}
+      <a class="btn" href="{% url 'verification:officer_schedule' app.pk %}">{% if app.status == 'scheduled' %}Reschedule inspection{% else %}Schedule inspection{% endif %}</a>
+    {% endif %}
+    {% if app.status == 'scheduled' %}
+      <a class="btn" href="{% url 'verification:officer_inspect' app.pk %}">Enter inspection results</a>
+    {% endif %}
+    {% if app.status == 'inspected' %}
+      <form method="post" action="{% url 'verification:officer_approve' app.pk %}">{% csrf_token %}<button type="submit" class="btn">Approve and issue certificate</button></form>
+      <a class="btn-link" href="{% url 'verification:officer_inspect' app.pk %}">Edit results</a>
+    {% endif %}
+    {% if app.status == 'submitted' or app.status == 'under_review' or app.status == 'scheduled' or app.status == 'inspected' %}
+      <a class="btn-link danger" href="{% url 'verification:officer_reject' app.pk %}">Reject</a>
+    {% endif %}
+    {% if app.status == 'certified' or app.status == 'rejected' %}<p class="muted">This application is closed.</p>{% endif %}
+  </div>
+</section>
+{% else %}
+<p class="notice">This application is handled by {{ app.officer.username }}.</p>
+{% endif %}
+
+<div class="split">
+  <section>
+    <h2>Shopkeeper</h2>
+    <dl class="facts">
+      <dt>Name</dt><dd>{{ app.applicant.get_full_name|default:app.applicant.username }}</dd>
+      <dt>Shop</dt><dd>{{ app.applicant.profile.shop_name }}</dd>
+      <dt>Phone</dt><dd>{{ app.applicant.profile.phone }}</dd>
+      <dt>Email</dt><dd>{{ app.applicant.email }}</dd>
+      <dt>Address</dt><dd>{{ app.applicant.profile.address }}</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>Instrument</h2>
+    <dl class="facts">
+      <dt>Category</dt><dd>{{ app.instrument.category.name }}</dd>
+      <dt>Make and model</dt><dd>{{ app.instrument.make }} {{ app.instrument.model_number }}</dd>
+      <dt>Serial number</dt><dd>{{ app.instrument.serial_number }}</dd>
+      <dt>Capacity</dt><dd>{{ app.instrument.capacity|floatformat:"-3" }} {{ app.instrument.unit }}</dd>
+      <dt>Accuracy class</dt><dd>{{ app.instrument.get_accuracy_class_display }}</dd>
+      <dt>Place of use</dt><dd>{{ app.instrument.location_of_use }}</dd>
+    </dl>
+  </section>
+</div>
+
+<div class="split">
+  <section>
+    <h2>Documents</h2>
+    {% for d in documents %}
+      <p><a href="{% url 'verification:document_download' d.pk %}" target="_blank" rel="noopener">{{ d.get_doc_type_display }}</a> <span class="muted">{{ d.uploaded_at|date:"d M Y" }}</span></p>
+    {% empty %}<p class="muted">No documents uploaded.</p>{% endfor %}
+    {% if payment %}<p class="muted small">Fee ₹{{ payment.amount }} paid by {{ payment.get_method_display }} ({{ payment.transaction_id }}).</p>{% endif %}
+  </section>
+  <section>
+    <h2>Inspection</h2>
+    {% if app.inspection_date %}<p>Scheduled for {{ app.inspection_date|date:"d M Y" }}{% if app.inspection_note %}: {{ app.inspection_note }}{% endif %}</p>{% endif %}
+    {% if inspection %}
+      <dl class="facts">
+        <dt>Inspected on</dt><dd>{{ inspection.inspected_on|date:"d M Y" }}</dd>
+        <dt>Reference value</dt><dd>{{ inspection.reference_value|floatformat:"-3" }}</dd>
+        <dt>Observed value</dt><dd>{{ inspection.observed_value|floatformat:"-3" }}</dd>
+        <dt>Error</dt><dd>{{ inspection.error|floatformat:"-3" }} (limit {{ inspection.permissible_error|floatformat:"-3" }})</dd>
+        <dt>Result</dt><dd>{% if inspection.within_tolerance %}Within the permissible error{% else %}Outside the permissible error{% endif %}</dd>
+      </dl>
+      {% if inspection.remarks %}<p class="muted">{{ inspection.remarks }}</p>{% endif %}
+    {% elif not app.inspection_date %}<p class="muted">Not scheduled yet.</p>{% endif %}
+  </section>
+</div>
+
+{% if certificate %}
+<section class="notice notice-ok">
+  <h2>Certificate {{ certificate.number }}</h2>
+  <p>Valid until {{ certificate.valid_until|date:"d M Y" }}. <a href="{% url 'verification:certificate_pdf' certificate.number %}">Download PDF</a></p>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Reference</th>
+        <th>Instrument</th>
+        {% if show_applicant %}<th>Shopkeeper</th>{% endif %}
+        <th>Status</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in page_obj %}
+      <tr>
+        <td><a href="{% url url_name a.pk %}">{{ a.reference }}</a></td>
+        <td>{{ a.instrument.make }} {{ a.instrument.model_number }}<br><span class="muted">{{ a.instrument.serial_number }}</span></td>
+        {% if show_applicant %}<td>{{ a.applicant.profile.shop_name|default:a.applicant.username }}</td>{% endif %}
+        <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td>
+        <td>{{ a.updated_at|date:"d M Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty">No applications match.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

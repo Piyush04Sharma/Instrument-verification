@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Reports</h1>
+  <a class="btn" href="?export=csv">Download CSV</a>
+</div>
+<div class="split">
+  <section>
+    <h2>Applications by status</h2>
+    <table class="table"><tbody>
+      {% for label, n in by_status %}<tr><td>{{ label }}</td><td class="num">{{ n }}</td></tr>{% empty %}<tr><td class="empty">No data yet.</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+  <section>
+    <h2>Applications by category</h2>
+    <table class="table"><tbody>
+      {% for label, n in by_category %}<tr><td>{{ label }}</td><td class="num">{{ n }}</td></tr>{% empty %}<tr><td class="empty">No data yet.</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+</div>
+<section>
+  <h2>Certificates issued by month</h2>
+  <table class="table"><tbody>
+    {% for label, n in monthly %}<tr><td>{{ label }}</td><td class="num">{{ n }}</td></tr>{% empty %}<tr><td class="empty">No certificates issued yet.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+{% endblock %}

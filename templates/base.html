@@ -1,0 +1,61 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Instrument verification{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="bar">
+      <a class="brand" href="{% url 'home' %}">Instrument verification</a>
+      <nav aria-label="Main">
+        {% if user.is_authenticated %}
+          {% if user_role == 'owner' %}
+            <a href="{% url 'verification:owner_dashboard' %}">Dashboard</a>
+            <a href="{% url 'instruments:list' %}">Instruments</a>
+            <a href="{% url 'verification:application_list' %}">Applications</a>
+          {% elif user_role == 'officer' %}
+            <a href="{% url 'verification:officer_dashboard' %}">Dashboard</a>
+            <a href="{% url 'verification:officer_applications' %}">Applications</a>
+          {% elif user_role == 'admin' %}
+            <a href="{% url 'verification:admin_dashboard' %}">Dashboard</a>
+            <a href="{% url 'verification:officer_applications' %}">Applications</a>
+            <a href="{% url 'verification:reports' %}">Reports</a>
+            <a href="{% url 'admin:index' %}">Admin site</a>
+          {% endif %}
+          <a href="{% url 'verification:verify' %}">Check a certificate</a>
+          <a href="{% url 'verification:notifications' %}">Notifications{% if unread_count %} <span class="count">{{ unread_count }}</span>{% endif %}</a>
+          <a href="{% url 'accounts:profile' %}">{{ user.username }}</a>
+          <form method="post" action="{% url 'accounts:logout' %}" class="inline-form">
+            {% csrf_token %}
+            <button type="submit" class="link-button">Log out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'verification:verify' %}">Check a certificate</a>
+          <a href="{% url 'accounts:login' %}">Log in</a>
+          <a href="{% url 'accounts:register' %}">Register</a>
+        {% endif %}
+      </nav>
+    </div>
+    <div class="ruler" aria-hidden="true"></div>
+  </header>
+
+  <main id="main" class="page">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <p class="message {{ message.tags }}" role="status">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>Online verification of weighing and measuring instruments. Course project for INT253 Web Development in Python using Django.</p>
+  </footer>
+</body>
+</html>

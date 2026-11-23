@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Check a weighing or measuring instrument{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Is that scale certified?</h1>
+  <p class="lead">Every verified instrument gets a certificate number. Type it in to see whether the certificate is genuine and still valid.</p>
+  <form method="get" action="{% url 'verification:verify' %}" class="verify-box">
+    <label for="cert-number">Certificate number</label>
+    <div class="verify-row">
+      <input id="cert-number" name="number" type="text" placeholder="LM-2026-A1B2C3" autocomplete="off" required>
+      <button type="submit" class="btn">Check certificate</button>
+    </div>
+  </form>
+  <p class="muted small">{{ certificates_issued }} certificate{{ certificates_issued|pluralize }} issued for {{ instruments_registered }} registered instrument{{ instruments_registered|pluralize }}.</p>
+</section>
+
+<section class="split">
+  <div>
+    <h2>How verification works</h2>
+    <ol class="plain-steps">
+      <li><strong>Register the instrument.</strong> Shopkeepers add the make, serial number, capacity and accuracy class.</li>
+      <li><strong>Apply and pay.</strong> Upload a licence or ID proof and pay the fee for the instrument's category.</li>
+      <li><strong>Inspection.</strong> An officer reviews the documents, schedules a visit and records the readings.</li>
+      <li><strong>Certificate.</strong> If the readings are within the permissible error, a certificate with a QR code is issued.</li>
+    </ol>
+  </div>
+  <div>
+    <h2>Who is it for</h2>
+    <p><strong>Shopkeepers and business owners</strong> register instruments, track applications and download certificates.</p>
+    <p><strong>Inspection officers</strong> review applications, schedule inspections and issue certificates.</p>
+    <p><strong>Administrators</strong> manage users, categories and reports.</p>
+    {% if not user.is_authenticated %}
+      <p class="actions"><a class="btn" href="{% url 'accounts:register' %}">Register as a shopkeeper</a> <a class="btn-link" href="{% url 'accounts:login' %}">Log in</a></p>
+    {% else %}
+      <p class="actions"><a class="btn" href="{% url 'accounts:dashboard' %}">Open your dashboard</a></p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

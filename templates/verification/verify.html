@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Check a certificate{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Check a certificate</h1>
+  <form method="get" action="{% url 'verification:verify' %}" class="verify-box">
+    <label for="cert-number">Certificate number</label>
+    <div class="verify-row">
+      <input id="cert-number" name="number" type="text" value="{{ number }}" placeholder="LM-2026-A1B2C3" autocomplete="off" required>
+      <button type="submit" class="btn">Check certificate</button>
+    </div>
+  </form>
+
+  {% if state %}
+  <div class="result result-{{ state }}">
+    <div class="seal" aria-hidden="true">
+      {% if state == 'valid' %}Valid{% elif state == 'expired' %}Expired{% else %}No match{% endif %}
+    </div>
+    <div>
+      {% if state == 'not_found' %}
+        <h2>No certificate found</h2>
+        <p>There is no certificate numbered {{ number }}. Check the number on the certificate, or treat the instrument as unverified.</p>
+      {% else %}
+        <h2>{% if state == 'valid' %}This certificate is valid{% else %}This certificate has expired{% endif %}</h2>
+        <dl class="facts">
+          <dt>Certificate</dt><dd>{{ certificate.number }}</dd>
+          <dt>Instrument</dt><dd>{{ certificate.application.instrument.category.name }}: {{ certificate.application.instrument.make }} {{ certificate.application.instrument.model_number }}</dd>
+          <dt>Serial number</dt><dd>{{ certificate.application.instrument.serial_number }}</dd>
+          <dt>Owner</dt><dd>{{ certificate.application.applicant.profile.shop_name|default:certificate.application.applicant.username }}</dd>
+          <dt>Verified on</dt><dd>{{ certificate.issued_on|date:"d M Y" }}</dd>
+          <dt>Valid until</dt><dd>{{ certificate.valid_until|date:"d M Y" }}</dd>
+        </dl>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

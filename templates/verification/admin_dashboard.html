@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Administrator dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Administrator dashboard</h1>
+  <div class="actions">
+    <a class="btn" href="{% url 'verification:reports' %}">Reports</a>
+    <a class="btn btn-quiet" href="{% url 'admin:index' %}">Admin site</a>
+  </div>
+</div>
+<div class="stats">
+  <div class="stat"><span class="stat-num">{{ owner_count }}</span><span class="stat-label">Shopkeepers</span></div>
+  <div class="stat"><span class="stat-num">{{ officer_count }}</span><span class="stat-label">Officers</span></div>
+  <div class="stat"><span class="stat-num">{{ instrument_count }}</span><span class="stat-label">Instruments</span></div>
+  <div class="stat"><span class="stat-num">₹{{ revenue }}</span><span class="stat-label">Fees collected</span></div>
+</div>
+<div class="split">
+  <section>
+    <h2>Applications by status</h2>
+    <table class="table">
+      <tbody>
+        {% for label, n, key in status_rows %}
+        <tr><td><span class="badge badge-{{ key }}">{{ label }}</span></td><td class="num">{{ n }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section>
+    <h2>Certificates</h2>
+    <dl class="facts">
+      <dt>Valid</dt><dd>{{ valid_certificates }}</dd>
+      <dt>Expiring in 30 days</dt><dd>{{ expiring_certificates }}</dd>
+      <dt>Expired</dt><dd>{{ expired_certificates }}</dd>
+    </dl>
+    <p class="muted small">Add officers, categories and permissions from the Admin site.</p>
+  </section>
+</div>
+{% endblock %}
